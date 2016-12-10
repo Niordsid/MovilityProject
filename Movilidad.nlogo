@@ -165,7 +165,7 @@ to setup
     random-zone-cars
 
 
-   ; set target-lane lane
+
      ]
 
   create-buses Num_Buses [
@@ -174,7 +174,6 @@ to setup
     set heading 90
     random-zone-bus
 
-   ; set target-lane lane
 
     ]
   create-camiones Num_Camiones [
@@ -182,8 +181,7 @@ to setup
     set color magenta - 1
 
     random-zone-cars
-   ; set lane (random 2)
-   ; set target-lane lane
+
      ]
 
   reset-ticks
@@ -226,29 +224,21 @@ to random-zone-cars
 
 end
 
+
+to comportamiento-autos
+  set speed 0
+  set change? false
+  set max-patience ((random 50) + 10)
+  set patience (max-patience - (random 10))
+
+end
+
 to configurar-velocidad
 
   set speed 0.1 + random 9.9
   set speed-limit (((random 11) / 10) + 1)
 
 end
-
-to setup-cars1
-
-
-
-
-  set change? false
-  set max-patience ((random 50) + 10)
-  set patience (max-patience - (random 10))
-
-  ;; make sure no two cars are on the same patch
-  loop [
-    ifelse any? other turtles-here [ fd 1 ] [ stop ]
-  ]
-end
-
-
 
 to go
    move-turtles
