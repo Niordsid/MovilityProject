@@ -145,6 +145,7 @@ end
 
 ;--------------------- Creacion del Mundo y de los Agentes presentes (Autos , Semaforos)
 to setup
+
   clear-all
 
   import-pcolors-rgb "Via.jpg"
@@ -161,10 +162,9 @@ to setup
 
     set size 1
     set color sky
-    set heading 90
-    setxy (random 200)  random (53 - 48) + 48
+    random-zone-cars
 
-   ; set lane (random 2)
+
    ; set target-lane lane
      ]
 
@@ -172,16 +172,16 @@ to setup
     set size 1
     set color red - 1
     set heading 90
-    setxy (random 200)  47
-   ; set lane (random 2)
+    random-zone-bus
+
    ; set target-lane lane
 
     ]
   create-camiones Num_Camiones [
     set size 1
     set color magenta - 1
-    set heading 90
-    setxy (random 200)  random (53 - 48) + 48
+
+    random-zone-cars
    ; set lane (random 2)
    ; set target-lane lane
      ]
@@ -189,18 +189,47 @@ to setup
   reset-ticks
 end
 
-to random-zone
+
+
+to random-zone-bus
+  setxy (random 200)  47
+  let target one-of other turtles-here
+    if target != nobody [
+      setxy (random 200)  47
+      ]
+end
+
+
+to random-zone-cars
 
   let saberzona random 2
 
   ifelse (saberzona = 0) [
+
+    set heading 90
     setxy (random 200) random (53 - 51) + 51
+    let target one-of other turtles-here
+    if target != nobody [
+      setxy (random 200) random (53 - 51) + 51
+      ]
     ]
 
   [if (saberzona = 1) [
+      set heading 90
   setxy (random 200) random (49 - 47) + 47
+  let target2 one-of other turtles-here
+    if target2 != nobody [
+      setxy (random 200) random (53 - 51) + 51
+      ]
        ]
    ]
+
+end
+
+to configurar-velocidad
+
+  set speed 0.1 + random 9.9
+  set speed-limit (((random 11) / 10) + 1)
 
 end
 
@@ -209,15 +238,6 @@ to setup-cars1
 
 
 
-  ifelse (lane = 0) [
-    setxy random-xcor 48
-  ]
-  [
-    setxy random-xcor 52
-  ]
-
-  set speed 0.1 + random 9.9
-  set speed-limit (((random 11) / 10) + 1)
   set change? false
   set max-patience ((random 50) + 10)
   set patience (max-patience - (random 10))
@@ -228,51 +248,7 @@ to setup-cars1
   ]
 end
 
-to setup-cars2
-  set size 1.5 set shape "car"   set heading 90
-  set lane (random 2)
-  set target-lane lane
-  ifelse (lane = 0) [
-    setxy random-xcor 48
-  ]
-  [
-    setxy random-xcor 52
-  ]
-  set heading 90
-  set speed 0.1 + random 9.9
-  set speed-limit (((random 11) / 10) + 1)
-  set change? false
-  set max-patience ((random 50) + 10)
-  set patience (max-patience - (random 10))
 
-  ;; make sure no two cars are on the same patch
-  loop [
-    ifelse any? other turtles-here [ fd 1 ] [ stop ]
-  ]
-end
-
-to setup-cars3
-  set size 1.5 set shape "car"   set heading 90
-  set lane (random 2)
-  set target-lane lane
-  ifelse (lane = 0) [
-    setxy random-xcor 48
-  ]
-  [
-    setxy random-xcor 52
-  ]
-  set heading 90
-  set speed 0.1 + random 9.9
-  set speed-limit (((random 11) / 10) + 1)
-  set change? false
-  set max-patience ((random 50) + 10)
-  set patience (max-patience - (random 10))
-
-  ;; make sure no two cars are on the same patch
-  loop [
-    ifelse any? other turtles-here [ fd 1 ] [ stop ]
-  ]
-end
 
 to go
    move-turtles
@@ -709,7 +685,7 @@ Num_Coches
 Num_Coches
 0
 25
-9
+11
 1
 1
 NIL
@@ -829,7 +805,7 @@ Num_Buses
 Num_Buses
 0
 25
-9
+11
 1
 1
 NIL
@@ -844,7 +820,7 @@ Num_Camiones
 Num_Camiones
 0
 25
-9
+11
 1
 1
 NIL
