@@ -40,7 +40,8 @@ coches-own
   max-patience  ;; the driver's maximum patience
   change?       ;; true if the car wants to change lanes
 ]
-;;;DESARROLLO DEL PROGRAMA
+
+
 
 
 ;;Declaración de variable globales
@@ -63,6 +64,7 @@ Globals
   ticks-at-last-change
 
   ;;necesarias para el shapefile
+
   vias
   poli
   separador
@@ -83,11 +85,12 @@ patches-own
   paradas   ;;estaciones o paradas de los buses - número de paradas en el tramo de la vía
 ]
 
-;;Declaración de tortugas
 
-;;DESARROLLO DEL SET UP (TENIENDO EN CUENTA AGREGAR LA INFORMACIÓN DE LOS SHAPEFILE GENERADOS ANTERIORMENTE)
+;;;DESARROLLO DEL PROGRAMA
+
+;-------------------Declaracion de los Semaforos--------------------------------
 to setup-semaforos
-  ;-------------------Semaforos
+
   ask patch 44 47 [ sprout-semaforos 1 [ set color green ] ]
   ask patch 44 48 [ sprout-semaforos 1 [ set color green ] ]
   ask patch 44 49 [ sprout-semaforos 1 [ set color green ] ]
@@ -139,6 +142,8 @@ to setup-semaforos
   ;----------------------------------------------------------
 end
 
+
+;--------------------- Creacion del Mundo y de los Agentes presentes (Autos , Semaforos)
 to setup
   clear-all
 
@@ -150,35 +155,54 @@ to setup
   set-default-shape buses "bus"
   set-default-shape camiones "truck"
 
+
+
   create-coches Num_Coches [
 
     set size 1
-    set color 26
+    set color sky
     set heading 90
-    set lane (random 2)
-    set target-lane lane
+    setxy (random 200)  random (53 - 48) + 48
+
+   ; set lane (random 2)
+   ; set target-lane lane
      ]
 
   create-buses Num_Buses [
     set size 1
-    set color 117
+    set color red - 1
     set heading 90
-    set lane (random 2)
-    set target-lane lane
+    setxy (random 200)  47
+   ; set lane (random 2)
+   ; set target-lane lane
 
     ]
   create-camiones Num_Camiones [
     set size 1
-    set color 45
+    set color magenta - 1
     set heading 90
-    set lane (random 2)
-    set target-lane lane
+    setxy (random 200)  random (53 - 48) + 48
+   ; set lane (random 2)
+   ; set target-lane lane
      ]
 
   reset-ticks
 end
 
+to random-zone
 
+  let saberzona random 2
+
+  ifelse (saberzona = 0) [
+    setxy (random 200) random (53 - 51) + 51
+    ]
+
+  [if (saberzona = 1) [
+  setxy (random 200) random (49 - 47) + 47
+       ]
+   ]
+
+end
 
 to setup-cars1
 
