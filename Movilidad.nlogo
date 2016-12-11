@@ -424,7 +424,15 @@ ifelse ((xcor >= 68 and xcor <= 70) and ycor = 47)[
       ifelse  ((xcor >= 110 and xcor <= 112) and ycor = 47)[
         cambiar-derecha
 
-        ][]
+        ][
+        ifelse ((xcor >= 47 and xcor <= 49) and ycor = 52) [
+          cambiar-izquierda
+          ][
+          ifelse ((xcor >= 137 and xcor <= 139) and ycor = 52)[
+            cambiar-izquierda
+            ][]
+          ]
+        ]
       ]
     ]
 
@@ -442,9 +450,23 @@ to revisar-zonas-muertas
   ]
 end
 
+to cambiar-izquierda
+  let cambiar-izq (random 15)
+  ifelse (cambiar-izq = 1)
+  [
+    set heading 0
+    set cont_indv_desv cont_indv_desv + 1
+
+  ]
+  [
+    set heading 90
+  ]
+
+end
+
 to cambiar-derecha
-  let cambiar-inter (random 15)
-  ifelse (cambiar-inter = 1)
+  let cambiar-dere (random 15)
+  ifelse (cambiar-dere = 1)
   [
     set heading 180
     set cont_indv_desv cont_indv_desv + 1
