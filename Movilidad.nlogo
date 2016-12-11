@@ -5,43 +5,21 @@ breed [buses bus]
 breed [camiones camion]
 breed [semaforos semaforo]
 
-buses-own
-[
-  speed         ;; the current speed of the car
+turtles-own [
+  car?
+  speed
   speed-limit   ;; the maximum speed of the car (different for all cars)
   speed-min
   lane          ;; the current lane of the car
   target-lane   ;; the desired lane of the car
   patience      ;; the driver's current patience
   max-patience  ;; the driver's maximum patience
-  change?       ;; true if the car wants to change lanes
-]
-
-camiones-own
-[
-  speed         ;; the current speed of the car
-  speed-limit   ;; the maximum speed of the car (different for all cars)
-  speed-min
-  lane          ;; the current lane of the car
-  target-lane   ;; the desired lane of the car
-  patience      ;; the driver's current patience
-  max-patience  ;; the driver's maximum patience
-  change?       ;; true if the car wants to change lanes
-]
-
-coches-own
-[
-  speed         ;; the current speed of the car
-  speed-limit   ;; the maximum speed of the car (different for all cars)
-  speed-min
-  lane          ;; the current lane of the car
-  target-lane   ;; the desired lane of the car
-  patience      ;; the driver's current patience
-  max-patience  ;; the driver's maximum patience
-  change?       ;; true if the car wants to change lanes
-]
+  change?   ]
 
 
+buses-own [
+  numero-pasajeros
+  ]
 
 
 ;;Declaración de variable globales
@@ -54,8 +32,10 @@ Globals
   estado-clima      ;;variable que nos permitira identificar el tipo de clima encontrado en la zona (soleado "0" o lluvioso "1")
 
   ;;variables del parche
-  cont_indv_bogota    ;;conteo número de individuos presentes en la ciudad de Bogota
-  cont_indv_mosquera  ;;conteo número de individuos presentes en el municipio de Mosquera
+  cont_indv_bogota_recogidos    ;;conteo número de individuos presentes en la ciudad de Bogota
+  cont_indv_bogota_dejados
+  cont_indv_mosquera_recogidos  ;;conteo número de individuos presentes en el municipio de Mosquera
+  cont_indv_mosquera_dejados
   cont_indv_desv      ;;conteo número de individuos que se perdieron del sistema a través de las interssecciones
 
 ; Semaforos
@@ -69,7 +49,6 @@ Globals
   poli
   separador
   semaforo
-  paradero
   tickss
 
   ;;variables vehicular
@@ -148,43 +127,48 @@ to setup
 
   clear-all
 
-  import-pcolors-rgb "Via.jpg"
+  import-pcolors-rgb "Via.bmp"
 
   set-default-shape semaforos "circle"
-  setup-semaforos
+ ; setup-semaforos
+  ;ask semaforos [
+  ;  set car? false
+  ;  ]
+
   set-default-shape coches "car"
   set-default-shape buses "bus"
   set-default-shape camiones "truck"
 
 
+  create-buses Num_Buses [
+    set size 1
+    set color red - 1
+    set heading 90
+    set car? true
+    set numero-pasajeros random 80
+    random-zone-bus
+    comportamiento-autos
+    ]
 
   create-coches Num_Coches [
 
     set size 1
     set color sky
+    set car? true
     random-zone-cars
-
-
-
+    comportamiento-autos
      ]
 
-  create-buses Num_Buses [
-    set size 1
-    set color red - 1
-    set heading 90
-    random-zone-bus
-
-
-    ]
   create-camiones Num_Camiones [
     set size 1
     set color magenta - 1
-
+    set car? true
     random-zone-cars
-
+    comportamiento-autos
      ]
 
   reset-ticks
+
 end
 
 
@@ -224,9 +208,9 @@ to random-zone-cars
 
 end
 
-
 to comportamiento-autos
-  set speed 0
+  configurar-velocidad
+  mantener-distancia
   set change? false
   set max-patience ((random 50) + 10)
   set patience (max-patience - (random 10))
@@ -235,221 +219,50 @@ end
 
 to configurar-velocidad
 
-  set speed 0.1 + random 9.9
-  set speed-limit (((random 11) / 10) + 1)
+  set speed 0.1 + random-float 0.9
+  set speed-limit 1
+  set speed-min 0
 
 end
 
-to go
-   move-turtles
-   change-to-red
-   drive
-   ; para semaforo if (light-color = red) [stop-car]
-  reset-ticks
-end
-
-to move-turtles
-  ask turtles [
-    if (pcolor = white) or ( pcolor = 104.9) or ( pcolor = 65) or ( pcolor = 13.5) or ( pcolor = 4.6) [
-  fd 1
-    ]
-  if (pcolor = black)[
-    stop
-    ]
-    ]
-  tick
-end
-
-to separate-cars ;; turtle procedure
-  if any? other turtles-here [
+to mantener-distancia
+  if any? other turtles-here with [car? != false] [
     fd 1
-    separate-cars
+    mantener-distancia
   ]
 end
 
-;; turtle (car) procedure
-to slow-down-car [ car-ahead ]
-  ;; slow down so you are driving more slowly than the car ahead of you
-  set speed [ speed ] of car-ahead - deceleration
-end
 
-;; turtle (car) procedure
-to speed-up-car
-  set speed speed + acceleration
-end
+; ------------------------Compotamiento en Ejecucion -------------------
 
 
-
-
-
-
-
-to homogeneizar
-
-  ;;corrección zonas exteriores
-  ask patches with [pcolor = 1] [set pcolor 0]
-  ask patches with [pcolor = 130.8] [set pcolor 0]
-  ask patches with [pcolor = 1.8] [set pcolor 0]
-  ask patches with [pcolor = 2.2] [set pcolor 0]
-  ask patches with [pcolor = 131.9] [set pcolor 0]
-  ask patches with [pcolor = 1.1] [set pcolor 0]
-  ask patches with [pcolor = 3.8] [set pcolor 0]
-  ask patches with [pcolor = 12.9] [set pcolor 0]
-  ;;corrección zonas rojas
-  ask patches with [pcolor = 12] [set pcolor 13.5]
-  ask patches with [pcolor = 12.2] [set pcolor 13.5]
-  ask patches with [pcolor = 12.1] [set pcolor 13.5]
-  ask patches with [pcolor = 3.2] [set pcolor 13.5]
-  ask patches with [pcolor = 13] [set pcolor 13.5]
-  ask patches with [pcolor = 11.2] [set pcolor 13.5]
-  ask patches with [pcolor = 133.3] [set pcolor 13.5]
-  ask patches with [pcolor = 12.8] [set pcolor 13.5]
-  ask patches with [pcolor = 133] [set pcolor 13.5]
-  ask patches with [pcolor = 13.3] [set pcolor 13.5]
-  ask patches with [pcolor = 3.9] [set pcolor 13.5]
-  ask patches with [pcolor = 1.2] [set pcolor 13.5]
-  ask patches with [pcolor = 133.2] [set pcolor 13.5]
-  ask patches with [pcolor = 132.8] [set pcolor 13.5]
-  ask patches with [pcolor = 12.7] [set pcolor 13.5]
-  ask patches with [pcolor = 12.9] [set pcolor 13.5]
-  ask patches with [pcolor = 13.1] [set pcolor 13.5]
-  ask patches with [pcolor = 133.1] [set pcolor 13.5]
-  ask patches with [pcolor = 133.4] [set pcolor 13.5]
-  ask patches with [pcolor = 1.5] [set pcolor 13.5]
-  ask patches with [pcolor = 3.7] [set pcolor 13.5]
-  ask patches with [pcolor = 132.7] [set pcolor 13.5]
-  ask patches with [pcolor = 3.3] [set pcolor 13.5]
-  ask patches with [pcolor = 12.6] [set pcolor 13.5]
-  ask patches with [pcolor = 130.4] [set pcolor 13.5]
-  ask patches with [pcolor = 132.6] [set pcolor 13.5]
-  ask patches with [pcolor = 132.9] [set pcolor 13.5]
-  ask patches with [pcolor = 13.7] [set pcolor 13.5]
-  ask patches with [pcolor = 2.7] [set pcolor 13.5]
-  ask patches with [pcolor = 13.2] [set pcolor 13.5]
-  ;;corrección vias
-  ask patches with [pcolor = 44.4] [set pcolor 9.9]
-  ask patches with [pcolor = 89.6] [set pcolor 9.9]
-  ask patches with [pcolor = 49.1] [set pcolor 9.9]
-  ask patches with [pcolor = 49] [set pcolor 9.9]
-  ask patches with [pcolor = 3] [set pcolor 9.9]
-  ask patches with [pcolor = 2.9] [set pcolor 9.9]
-  ask patches with [pcolor = 8.1] [set pcolor 9.9]
-  ask patches with [pcolor = 6] [set pcolor 9.9]
-  ask patches with [pcolor = 8] [set pcolor 9.9]
-  ask patches with [pcolor = 5.9] [set pcolor 9.9]
-  ask patches with [pcolor = 8.7] [set pcolor 9.9]
-  ask patches with [pcolor = 1.1] [set pcolor 9.9]
-  ask patches with [pcolor = 6.6] [set pcolor 9.9]
-  ask patches with [pcolor = 0.8] [set pcolor 9.9]
-  ask patches with [pcolor = 8.8] [set pcolor 9.9]
-  ask patches with [pcolor = 8.4] [set pcolor 9.9]
-  ask patches with [pcolor = 7] [set pcolor 9.9]
-  ask patches with [pcolor = 9] [set pcolor 9.9]
-  ask patches with [pcolor = 8.9] [set pcolor 9.9]
-  ask patches with [pcolor = 49.5] [set pcolor 9.9]
-  ask patches with [pcolor = 9.4] [set pcolor 9.9]
-  ask patches with [pcolor = 49.3] [set pcolor 9.9]
-  ask patches with [pcolor = 6.2] [set pcolor 9.9]
-  ask patches with [pcolor = 49.4] [set pcolor 9.9]
-  ask patches with [pcolor = 49.2] [set pcolor 9.9]
-  ask patches with [pcolor = 48.7] [set pcolor 9.9]
-  ask patches with [pcolor = 9.5] [set pcolor 9.9]
-  ask patches with [pcolor = 1.9] [set pcolor 9.9]
-  ask patches with [pcolor = 5.6] [set pcolor 9.9]
-  ask patches with [pcolor = 7.2] [set pcolor 9.9]
-  ask patches with [pcolor = 4.4] [set pcolor 9.9]
-  ask patches with [pcolor = 9.3] [set pcolor 9.9]
-  ask patches with [pcolor = 1.3] [set pcolor 9.9]
-  ask patches with [pcolor = 3.5] [set pcolor 9.9]
-  ask patches with [pcolor = 49] [set pcolor 9.9]
-  ask patches with [pcolor = 49.6] [set pcolor 9.9]
-  ask patches with [pcolor = 6.7] [set pcolor 9.9]
-  ask patches with [pcolor = 5.5] [set pcolor 9.9]
-  ask patches with [pcolor = 6.9] [set pcolor 9.9]
-  ask patches with [pcolor = 69.3] [set pcolor 9.9]
-  ask patches with [pcolor = 9.6] [set pcolor 9.9]
-  ask patches with [pcolor = 0.7] [set pcolor 9.9]
-  ;;corrección paraderos
-  ask patches with [pcolor = 97.6] [set pcolor 104.9]
-  ask patches with [pcolor = 106.2] [set pcolor 104.9]
-  ask patches with [pcolor = 89.4] [set pcolor 104.9]
-  ask patches with [pcolor = 94.9] [set pcolor 104.9]
-  ask patches with [pcolor = 89.3] [set pcolor 104.9]
-  ask patches with [pcolor = 97.1] [set pcolor 104.9]
-  ask patches with [pcolor = 106.4] [set pcolor 104.9]
-  ask patches with [pcolor = 106.9] [set pcolor 104.9]
-  ask patches with [pcolor = 97.9] [set pcolor 104.9]
-  ask patches with [pcolor = 89.5] [set pcolor 104.9]
-  ask patches with [pcolor = 89.2] [set pcolor 104.9]
-  ask patches with [pcolor = 107.7] [set pcolor 104.9]
-  ;;corrección separadores
-  ask patches with [pcolor = 9.2] [set pcolor 4.6]
-  ask patches with [pcolor = 6.4] [set pcolor 4.6]
-  ask patches with [pcolor = 6.5] [set pcolor 4.6]
-  ask patches with [pcolor = 8.5] [set pcolor 4.6]
-  ask patches with [pcolor = 6.8] [set pcolor 4.6]
-  ask patches with [pcolor = 5.1] [set pcolor 4.6]
-  ask patches with [pcolor = 8.2] [set pcolor 4.6]
-  ask patches with [pcolor = 5.3] [set pcolor 4.6]
-  ask patches with [pcolor = 4.9] [set pcolor 4.6]
-  ask patches with [pcolor = 6.8] [set pcolor 4.6]
-  ask patches with [pcolor = 5.2] [set pcolor 4.6]
-  ask patches with [pcolor = 5.4] [set pcolor 4.6]
-  ask patches with [pcolor = 6.3] [set pcolor 4.6]
-  ask patches with [pcolor = 98] [set pcolor 4.6]
-  ;;Corrección semaforos
-  ask patches with [pcolor = 44] [set pcolor 65]
-  ask patches with [pcolor = 44.5] [set pcolor 65]
-  ask patches with [pcolor = 44.1] [set pcolor 65]
-  ask patches with [pcolor = 44.3] [set pcolor 65]
-  ask patches with [pcolor = 46.9] [set pcolor 65]
-  ask patches with [pcolor = 45.7] [set pcolor 65]
-  ask patches with [pcolor = 46] [set pcolor 65]
-  ask patches with [pcolor = 55.7] [set pcolor 65]
-  ask patches with [pcolor = 46.6] [set pcolor 65]
-  ask patches with [pcolor = 44.2] [set pcolor 65]
-  ask patches with [pcolor = 48.1] [set pcolor 65]
-  ask patches with [pcolor = 54.6] [set pcolor 65]
-  ask patches with [pcolor = 51] [set pcolor 65]
-  ask patches with [pcolor = 44] [set pcolor 65]
-  ask patches with [pcolor = 52.1] [set pcolor 65]
-  ask patches with [pcolor = 52.6] [set pcolor 65]
-  ask patches with [pcolor = 42.8] [set pcolor 65]
-  ask patches with [pcolor = 57] [set pcolor 65]
-  ask patches with [pcolor = 55.9] [set pcolor 65]
-  ask patches with [pcolor = 43.9] [set pcolor 65]
-
-end
-
-;; Creación de las tortugas a manejar en el modelo
-;to create
-
-  ;;inicializacion de la tortuga
-  ;clear-turtles clear-all-plots
-  ;set carros (Num_vehiculos * 0.60)
-  ;set buses (Num_vehiculos * 0.30)
-  ;set camiones (Num_vehiculos * 0.10)
-  ;set num-individuos random 1120
-
-  ;crt carros [ setxy xcor 24 + random 5 setxy ycor 53 + random 5 set size 1 set shape "car"  set color 26 set heading 90 ]
-  ;crt buses [ setxy xcor 24 + random 5 setxy ycor 53 + random 5 set size 1 set shape "car"  set color 45  set heading 90]
-  ;crt camiones [ setxy xcor 24 + random 5 setxy ycor 53 + random 5 set size 1 set shape "car"  set color 117 set heading 90 ]
-
-;end
-
-
-;;;;;; 2 lineas trafico
 
 to drive
-  ask turtles [
-    ifelse (any? turtles-at 1 0) [
-      set speed ([speed] of (one-of (turtles-at 1 0)))
+
+ comportamiento-semaforos
+
+ ask turtles with [car? = true]
+   [
+   move
+   ask turtles with [color = red - 1][
+
+   revisar-paraderos]
+   ]
+
+   tick
+
+
+end
+
+to move
+  ifelse (any? turtles-at 1 0) [
+      set speed ([speed] of (one-of (turtles-at 1 0))) ; revisar que el target sea un carro y no un semaforo
       decelerate
     ]
     [
       ifelse (look-ahead = 2) [
         ifelse (any? turtles-at 2 0) [
-          set speed ([speed] of (one-of turtles-at 2 0))
+          set speed ([speed] of (one-of turtles-at 2 0)) ;; revisar que el target sea un carro y no un semaforo
           decelerate
         ]
         [
@@ -462,164 +275,121 @@ to drive
     ]
     if (speed < 0.01) [ set speed 0.01 ]
     if (speed > speed-limit) [ set speed speed-limit ]
-  ]
-  ; Now that all speeds are adjusted, give turtles a chance to change lanes
-  ask turtles [
-    ifelse (change? = false) [ signal ] [ change-lanes ]
-    ;; Control for making sure no one crashes.
-    ifelse (any? turtles-at 1 0) and (xcor != min-pxcor - .5) [
-      set speed [speed] of (one-of turtles-at 1 0)
-    ]
-    [
-      ifelse ((any? turtles-at 2 0) and (speed > 1.0)) [
-        set speed ([speed] of (one-of turtles-at 2 0))
-        fd 1
-      ]
-      [
-        jump speed
-      ]
-    ]
-  ]
-  tick
+    fd speed
+
 end
 
-;; increase speed of cars
 to accelerate  ;; turtle procedure
-  set speed (speed + (acceleration / 1000))
+  set speed (speed + (aceleracion / 1000))
 end
 
 ;; reduce speed of cars
 to decelerate  ;; turtle procedure
-  set speed (speed - (deceleration / 1000))
+  set speed (speed - (desaceleracion / 1000))
 end
 
-;; undergoes search algorithms
-to change-lanes  ;; turtle procedure
-  ifelse (patience <= 0) [
-    ifelse (max-patience <= 1) [
-      set max-patience (random 10) + 1
-    ]
-    [
-      set max-patience (max-patience - (random 5))
-    ]
-    set patience max-patience
-    ifelse (target-lane = 0) [
-      set target-lane 1
-      set lane 0
-    ]
-    [
-      set target-lane 0
-      set lane 1
-    ]
-  ]
-  [
-    set patience (patience - 1)
-  ]
-  ifelse (target-lane = lane) [
-    ifelse (target-lane = 0) [
-      set target-lane 1
-      set change? false
-    ]
-    [
-      set target-lane 0
-      set change? false
-    ]
-  ]
-  [
-    ifelse (target-lane = 1) [
-      ifelse (pycor = 2) [
-        set lane 1
-        set change? false
-      ]
+to revisar-paraderos
+
+
+
+
+      ifelse (pcolor = [0 69 139]) [
+
+      if (numero-pasajeros <= 80)
       [
-        ifelse (not any? turtles-at 0 1) [
-          set ycor (ycor + 1)
-        ]
-        [
-          ifelse (not any? turtles-at 1 0) [
-            set xcor (xcor + 1)
+
+          let decicion-dejar-recoger random 2
+          ifelse (decicion-dejar-recoger = 1)
+          [  ; si el numero random es 0 se tomara la decicion de dejar pasajeros
+            let num-random (random 15)
+            set numero-pasajeros (numero-pasajeros - num-random)
+
+
+            ifelse (xcor <= 107 )
+            [
+              set cont_indv_bogota_recogidos cont_indv_bogota_recogidos + num-random
+              print "estaba en bogota recogiendo pasajeros"
+            ]
+            [
+              ifelse (xcor > 107)[
+                set cont_indv_mosquera_recogidos cont_indv_mosquera_recogidos + num-random
+                print "estaba en mosquera recogiendo pasajeros"
+                ][]
+            ]
           ]
+
           [
-            decelerate
-            if (speed <= 0) [ set speed 0.1 ]
+            let num-random (80 - numero-pasajeros)
+            set numero-pasajeros (numero-pasajeros + num-random)
+
+
+            ifelse (xcor <= 107 )[
+              set cont_indv_bogota_dejados cont_indv_bogota_dejados + num-random
+              print "estaba en bogota dejando pasajeros"
+              ][
+              ifelse (xcor > 107)[
+                set cont_indv_mosquera_dejados cont_indv_mosquera_dejados + num-random
+                print "estaba en mosquera dejando pasajeros"
+                ][]
+              ]
+
           ]
-        ]
+
+
       ]
-    ]
-    [
-      ifelse (pycor = -2) [
-        set lane 0
-        set change? false
+      fd 1
+      move
       ]
+
       [
-        ifelse (not any? turtles-at 0 -1) [
-          set ycor (ycor - 1)
         ]
-        [
-          ifelse (not any? turtles-at 1 0) [
-            set xcor (xcor + 1)
-          ]
-          [
-            decelerate
-            if (speed <= 0) [ set speed 0.1 ]
-          ]
-        ]
-      ]
-    ]
-  ]
-end
 
-to signal
-  ifelse (any? turtles-at 1 0) [
-    if ([speed] of (one-of (turtles-at 1 0))) < (speed) [
-      set change? true
-    ]
-  ]
-  [
-    set change? false
-  ]
 end
 
 
 
-;;;;;;;;;; Semaforos
 
 
-;semaforos
 
-to change-to-red
-  ask semaforos with [ color = 65 ] [
-    set color red
-    ask other semaforos [ set color 65 ]
+
+
+
+
+
+
+
+to comportamiento-semaforos
+
+  ask semaforos with [ xcor = 44 ] [
+    if auto? and elapsed? duracion-luz-verde [
+    change-to-yellow
+  ]
+  ; if a light has been yellow for long enough,
+  ; we turn it red and turn the other one green
+  if any? semaforos with [ color = yellow ] and elapsed? duracion-luz-amarilla [
+    change-to-red
+  ]
+    ]
+
+end
+
+to change-to-yellow
+  ask semaforos with [ color = green ] [
+    set color yellow
     set ticks-at-last-change ticks
   ]
 end
 
-to change-current
-  ask current-light
-  [
-    set green-light-up? (not green-light-up?)
-    set-signal-colors
+to change-to-red
+  ask semaforos with [ color = yellow ] [
+    set color red
+    ask other semaforos [ set color green ]
+    set ticks-at-last-change ticks
   ]
 end
 
-to set-signal-colors  ;; intersection (patch) procedure
-  ifelse power?
-  [
-    ifelse green-light-up?
-    [
-      ask patch-at -1 0 [ set pcolor red ]
-      ask patch-at 0 1 [ set pcolor 65 ]
-    ]
-    [
-      ask patch-at -1 0 [ set pcolor 65 ]
-      ask patch-at 0 1 [ set pcolor red ]
-    ]
-  ]
-  [
-    ask patch-at -1 0 [ set pcolor white ]
-    ask patch-at 0 1 [ set pcolor white ]
-  ]
+to-report elapsed? [ time-length ]
+  report (ticks - ticks-at-last-change) > time-length
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -675,69 +445,22 @@ Num_Coches
 Num_Coches
 0
 25
-11
-1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-85
-446
-194
-479
-NIL
-homogeneizar
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-249
-79
-421
-112
-Num_inividuos
-Num_inividuos
-0
-500
-0
+3
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-250
-148
-422
-181
-acceleration
-acceleration
+18
+224
+190
+257
+aceleracion
+aceleracion
 0
-1
-0
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-249
-113
-421
-146
-deceleration
-deceleration
-0
-100
-0
+50
+3
 1
 1
 NIL
@@ -764,7 +487,7 @@ BUTTON
 410
 455
 NIL
-go
+drive
 T
 1
 T
@@ -773,16 +496,16 @@ NIL
 NIL
 NIL
 NIL
-1
+0
 
 SWITCH
 450
 10
 553
 43
-power?
-power?
-1
+auto?
+auto?
+0
 1
 -1000
 
@@ -795,7 +518,7 @@ Num_Buses
 Num_Buses
 0
 25
-11
+3
 1
 1
 NIL
@@ -810,11 +533,94 @@ Num_Camiones
 Num_Camiones
 0
 25
-11
+3
 1
 1
 NIL
 HORIZONTAL
+
+SLIDER
+18
+267
+190
+300
+desaceleracion
+desaceleracion
+0
+10
+2
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+22
+376
+194
+409
+duracion-luz-verde
+duracion-luz-verde
+0
+50
+12
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+22
+420
+194
+453
+duracion-luz-amarilla
+duracion-luz-amarilla
+0
+10
+3
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+368
+172
+474
+205
+drive-on-step
+drive
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+17
+509
+528
+832
+# Individuos
+# Recogidos
+tiempo
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"# Recogidos_Mosquera" 1.0 0 -13791810 true "" "plot cont_indv_mosquera_recogidos"
+"# Recogidos_Bogota" 1.0 0 -2139308 true "" "plot cont_indv_bogota_recogidos"
+"# Dejados_Mosquera" 1.0 0 -14070903 true "" "plot cont_indv_mosquera_dejados"
+"# Dejados_Bogota" 1.0 0 -5298144 true "" "plot cont_indv_bogota_dejados"
 
 @#$#@#$#@
 ## WHAT IS IT?
