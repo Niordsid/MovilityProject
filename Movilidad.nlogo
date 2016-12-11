@@ -17,6 +17,9 @@ turtles-own [
   change?   ]
 
 
+
+
+
 buses-own [
   numero-pasajeros
   ]
@@ -58,6 +61,8 @@ Globals
 ;;Declaración de patches
 patches-own
 [
+  sensor1?
+  from
   intersection?   ;; true if the patch is at the intersection of two roads
   green-light-up? ;;patches de los semaforos presentes en el tramo  -  número de semaforos
   peaje     ;;peajes existentes en el recorrido - número de peajes
@@ -67,59 +72,6 @@ patches-own
 
 ;;;DESARROLLO DEL PROGRAMA
 
-;-------------------Declaracion de los Semaforos--------------------------------
-to setup-semaforos
-
-  ask patch 44 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 44 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 44 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 44 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 44 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 44 53 [ sprout-semaforos 1 [ set color green ] ]
-
-  ask patch 66 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 66 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 66 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 66 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 66 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 66 53 [ sprout-semaforos 1 [ set color green ] ]
-
-  ask patch 84 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 84 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 84 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 84 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 84 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 84 53 [ sprout-semaforos 1 [ set color green ] ]
-
-  ask patch 107 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 107 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 107 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 107 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 107 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 107 53 [ sprout-semaforos 1 [ set color green ] ]
-
-  ask patch 122 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 122 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 122 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 122 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 122 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 122 53 [ sprout-semaforos 1 [ set color green ] ]
-
-  ask patch 160 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 160 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 160 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 160 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 160 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 160 53 [ sprout-semaforos 1 [ set color green ] ]
-
-  ask patch 188 47 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 188 48 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 188 49 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 188 51 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 188 52 [ sprout-semaforos 1 [ set color green ] ]
-  ask patch 188 53 [ sprout-semaforos 1 [ set color green ] ]
-  ;----------------------------------------------------------
-end
 
 
 ;--------------------- Creacion del Mundo y de los Agentes presentes (Autos , Semaforos)
@@ -129,11 +81,8 @@ to setup
 
   import-pcolors-rgb "Via.bmp"
 
-  set-default-shape semaforos "circle"
- ; setup-semaforos
-  ;ask semaforos [
-  ;  set car? false
-  ;  ]
+
+  configurar-semaforos
 
   set-default-shape coches "car"
   set-default-shape buses "bus"
@@ -159,6 +108,7 @@ to setup
     comportamiento-autos
      ]
 
+
   create-camiones Num_Camiones [
     set size 1
     set color magenta - 1
@@ -171,7 +121,22 @@ to setup
 
 end
 
+;-------------------------------Sensores -------------------------------------------
+to configurar-semaforos
+ask patches [
+  set sensor1? false
+  if (pxcor = 44) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 1 set pcolor green]
+  if (pxcor = 66) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 2 set pcolor green]
+  if (pxcor = 84) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 3 set pcolor green]
+  if (pxcor = 107) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 4 set pcolor green]
+  if (pxcor = 122) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 5 set pcolor green]
+  if (pxcor = 160) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 6 set pcolor green]
+  if (pxcor >= 187 and pxcor <= 188) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 7 set pcolor green]
 
+
+  ]
+end
+;------------------------------ Comportamiento Autos -------------------------------
 
 to random-zone-bus
   setxy (random 200)  47
@@ -232,7 +197,20 @@ to mantener-distancia
   ]
 end
 
+;-------------------Declaracion de los Semaforos-------------------------------------------
+to setup-semaforos
 
+ ; foreach [90 270] [set-car-light? green]
+
+end
+
+to set-car-light [dir col]
+ ; ask patches with [sensor1? = true and from = dir] [set pcolor col set change-marker ticks]
+end
+
+to set-walker-light [dir col]
+ ; ask patches with [sensor2? = true and from = dir] [set pcolor col set change-marker ticks]
+end
 ; ------------------------Compotamiento en Ejecucion -------------------
 
 
@@ -363,6 +341,7 @@ end
 to change-to-yellow
   ask semaforos with [ color = green ] [
     set color yellow
+    set speed 0.05
     set ticks-at-last-change ticks
   ]
 end
@@ -370,6 +349,7 @@ end
 to change-to-red
   ask semaforos with [ color = yellow ] [
     set color red
+    set speed 0
     ask other semaforos [ set color green ]
     set ticks-at-last-change ticks
   ]
@@ -490,7 +470,7 @@ Num_Buses
 Num_Buses
 0
 25
-3
+15
 1
 1
 NIL
