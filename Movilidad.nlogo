@@ -35,6 +35,8 @@ Globals
   num-vehiculos     ;;número de vehiculos total presentes en el modelo incluyendo carros, buses y camiones
 
   estado-clima      ;;variable que nos permitira identificar el tipo de clima encontrado en la zona (soleado "0" o lluvioso "1")
+  dias-lluviosos
+  dias-buenclima
 
   ;;variables del parche
   cont_indv_bogota_recogidos    ;;conteo número de individuos presentes en la ciudad de Bogota
@@ -170,7 +172,16 @@ to mantener-distancia
     mantener-distancia
   ]
 end
+;-------------------- crear Observador ---------
 
+to crear-manejador-tiempo
+  create-inmoviles 1[
+  set car? false
+  set size 0.5
+  set color black
+  setxy  0  97
+  ]
+end
 ;--------------------- Creacion del Mundo y de los Agentes presentes (Autos , Semaforos)
 to setup
 
@@ -185,9 +196,11 @@ to setup
   set-default-shape camiones "truck"
   set-default-shape semaforos "circle"
   set cont_indv_desv 0
+  set dias-lluviosos 0
+  set dias-buenclima 0
 
   ;crear-semaforos
-
+  crear-manejador-tiempo
   create-buses Num_Buses [
     set size 1
     set color turquoise - 1
@@ -237,21 +250,37 @@ to drive
    [
    move
    tomar-interseccion
-
-
    change-carril
+   reproducir-buses
+   reproducir-camiones
+
    ask turtles with [color = turquoise - 1][revisar-paraderos]
    ]
-revisar-zonas-muertas
- ;ask semaforos [comportamiento-semaforos estado-climatico]
 
+   ;ask semaforos [comportamiento-semaforos ]
+
+   ask inmoviles[estado-climatico]
+   revisar-zonas-muertas
 
  tick
 
 
 end
 
-;-------------------------------------------------------------------------------------------
+to reproducir-buses
+  if random-float 100 < porcen-aparicion-buses[
+    hatch 1 [random-zone-bus comportamiento-autos]
+    ]
+
+end
+
+to reproducir-camiones
+  if random-float 100 < porcen-aparicion-camiones[
+    hatch 1 [random-zone-cars comportamiento-autos]
+    ]
+end
+
+;--------------------------------Procedimiento para Moverse y Elegir un nuevo Carril------------------------------------
 
 to move
 
@@ -401,7 +430,7 @@ to change-lanes  ;; turtle procedure
   ]
 end
 
-;------------------------------------------------------------------------------------------------
+;-----------------------Girar a la Derecha o a la Izuierda --------------------------------------------
 
 to tomar-interseccion
 
@@ -479,7 +508,7 @@ end
 
 
 
-;-------------------------------------------------------------------------------------------------
+;-------------------------------Recoger o Dejar Pasajeros------------------------------------------
 
 to revisar-paraderos
 
@@ -569,10 +598,15 @@ end
 
 ;------------------------------- Soleado o  LLuvioso -----------------------------------------
 to estado-climatico
-ifelse (ticks mod 400 = 0)[
+ifelse (ticks mod 3000 = 0)[
+
    set estado-clima 0
+   set dias-lluviosos dias-lluviosos + 1
+
   ][
+  if (ticks mod 500 = 0)[
   set estado-clima 1
+  set dias-buenclima dias-buenclima + 1]
   ]
 
 end
@@ -605,10 +639,10 @@ ticks
 30.0
 
 BUTTON
-18
-20
-192
-60
+9
+593
+183
+633
 NIL
 setup
 NIL
@@ -622,10 +656,10 @@ NIL
 1
 
 SLIDER
-18
-77
-190
-110
+19
+10
+191
+43
 Num_Coches
 Num_Coches
 1
@@ -637,10 +671,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-224
-190
-257
+15
+299
+187
+332
 aceleracion
 aceleracion
 0
@@ -652,10 +686,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-21
-605
-84
-638
+1531
+105
+1594
+138
 NIL
 drive
 T
@@ -669,10 +703,10 @@ NIL
 0
 
 SWITCH
-19
-454
-122
-487
+16
+529
+119
+562
 auto?
 auto?
 0
@@ -680,10 +714,10 @@ auto?
 -1000
 
 SLIDER
-18
-119
-190
-152
+19
+52
+191
+85
 Num_Buses
 Num_Buses
 1
@@ -695,10 +729,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-161
-190
-194
+19
+94
+191
+127
 Num_Camiones
 Num_Camiones
 1
@@ -710,10 +744,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-267
-190
-300
+15
+342
+187
+375
 desaceleracion
 desaceleracion
 0
@@ -725,10 +759,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-19
-371
-191
-404
+16
+446
+188
+479
 duracion-luz-verde
 duracion-luz-verde
 0
@@ -740,10 +774,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-19
-415
-191
-448
+16
+490
+188
+523
 duracion-luz-amarilla
 duracion-luz-amarilla
 0
@@ -755,10 +789,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-21
-557
-127
-590
+1531
+57
+1637
+90
 drive-on-step
 drive
 NIL
@@ -772,10 +806,10 @@ NIL
 0
 
 PLOT
-1524
-21
-2035
-344
+1670
+26
+2181
+349
 # Individuos
 # Recogidos
 tiempo
@@ -793,10 +827,10 @@ PENS
 "# Dejados_Bogota" 1.0 0 -5298144 true "" "plot cont_indv_bogota_dejados"
 
 SLIDER
-18
-307
-190
-340
+15
+382
+187
+415
 separacion
 separacion
 0
@@ -808,30 +842,30 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-23
-350
-173
-368
+20
+425
+170
+443
 Semaforos
 11
 0.0
 1
 
 TEXTBOX
-23
-203
-173
-221
+20
+278
+170
+296
 Comportamiento Autos
 11
 0.0
 1
 
 PLOT
-1524
-367
-1904
-567
+1670
+372
+2050
+572
 Promedio de Velocidad
 Tiempo
 Velocidad
@@ -846,10 +880,10 @@ PENS
 "Promedio de Velocidad" 1.0 0 -13840069 true "" "plot mean [speed] of turtles with [car? = true]"
 
 MONITOR
-1932
-384
-2015
-429
+2078
+389
+2161
+434
 Estado Clima
 estado-clima
 17
@@ -857,10 +891,10 @@ estado-clima
 11
 
 PLOT
-1525
-575
-1902
-746
+1671
+580
+2048
+751
 Rutas Desviadas
 Tiempo
 # Rutas desviadas
@@ -873,6 +907,70 @@ true
 "" ""
 PENS
 "# Rutas Desviadas" 1.0 0 -14070903 true "" "plot cont_indv_desv"
+
+PLOT
+2076
+441
+2361
+617
+Clima
+Tiempo
+Dias LLuvios - Normal
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"# Dias LLuviosos" 1.0 0 -2674135 true "" "plot dias-lluviosos"
+"# Dias Buen_Clima" 1.0 0 -13840069 true "" "plot dias-buenclima"
+
+SLIDER
+11
+148
+200
+181
+porcen-aparicion-coches
+porcen-aparicion-coches
+0
+1
+0.05
+0.05
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+193
+200
+226
+porcen-aparicion-buses
+porcen-aparicion-buses
+0
+1
+0.1
+0.05
+1
+NIL
+HORIZONTAL
+
+SLIDER
+5
+233
+207
+266
+porcen-aparicion-camiones
+porcen-aparicion-camiones
+0
+1
+0.1
+0.05
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
