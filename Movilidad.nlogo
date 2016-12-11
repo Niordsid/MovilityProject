@@ -880,10 +880,10 @@ PENS
 "Promedio de Velocidad" 1.0 0 -13840069 true "" "plot mean [speed] of turtles with [car? = true]"
 
 MONITOR
-2078
-389
-2161
-434
+2077
+374
+2146
+419
 Estado Clima
 estado-clima
 17
@@ -909,10 +909,10 @@ PENS
 "# Rutas Desviadas" 1.0 0 -14070903 true "" "plot cont_indv_desv"
 
 PLOT
-2076
-441
-2361
-617
+2072
+442
+2362
+563
 Clima
 Tiempo
 Dias LLuvios - Normal
@@ -971,6 +971,26 @@ porcen-aparicion-camiones
 1
 NIL
 HORIZONTAL
+
+PLOT
+2067
+578
+2396
+752
+# De Vehiculos presentes en la Via
+Tiempo
+# De Vehiculos
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Coches" 1.0 0 -13791810 true "" "plot count turtles with [color = sky]"
+"Buses" 1.0 0 -15302303 true "" "plot count turtles with [color = turquoise - 1]"
+"Camiones" 1.0 0 -14439633 true "" "plot count turtles with [color = lime - 1]"
 
 @#$#@#$#@
 ## WHAT IS IT?
