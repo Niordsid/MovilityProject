@@ -1,9 +1,9 @@
 extensions [gis]
-breed [poli-labels poli-label]
 breed [coches coche]
 breed [buses bus]
 breed [camiones camion]
 breed [semaforos semaforo]
+breed [inmoviles inmovil]
 
 turtles-own [
   car?
@@ -14,23 +14,25 @@ turtles-own [
   target-lane   ;; the desired lane of the car
   patience      ;; the driver's current patience
   max-patience  ;; the driver's maximum patience
-  change?   ]
-
-
-
-
+  change?
+  parar?
+  ]
 
 buses-own [
   numero-pasajeros
   ]
 
-
+semaforos-own[
+  sensor1?
+  from
+  Xcord
+  Ycord
+  ]
 ;;Declaración de variable globales
 Globals
 [
   num-individuos    ;;número de individuos total que se encontraran en el modelo
   num-vehiculos     ;;número de vehiculos total presentes en el modelo incluyendo carros, buses y camiones
-  num-infractores   ;;número total de infractores que vamos a encontrar a lo largo del tramo
 
   estado-clima      ;;variable que nos permitira identificar el tipo de clima encontrado en la zona (soleado "0" o lluvioso "1")
 
@@ -40,11 +42,6 @@ Globals
   cont_indv_mosquera_recogidos  ;;conteo número de individuos presentes en el municipio de Mosquera
   cont_indv_mosquera_dejados
   cont_indv_desv      ;;conteo número de individuos que se perdieron del sistema a través de las interssecciones
-
-; Semaforos
-
-  current-light
-  ticks-at-last-change
 
   ;;necesarias para el shapefile
 
@@ -61,8 +58,8 @@ Globals
 ;;Declaración de patches
 patches-own
 [
-  sensor1?
-  from
+
+
   intersection?   ;; true if the patch is at the intersection of two roads
   green-light-up? ;;patches de los semaforos presentes en el tramo  -  número de semaforos
   peaje     ;;peajes existentes en el recorrido - número de peajes
@@ -71,71 +68,52 @@ patches-own
 
 
 ;;;DESARROLLO DEL PROGRAMA
+;-------------------------------Sensores Semaforos -------------------------------------------
+
+to coordenadas-semaforos
+
+   file-open "XCoor.txt"
+   let coordinatesx []
+
+   while [ not file-at-end? ] [
+   set coordinatesx lput file-read coordinatesx
+   ]
+   file-close
+   (foreach sort semaforos coordinatesx
+    [ask ?1 [set xcor ?2]])
+
+   file-open "YCoor.txt"
+   let coordinatesy []
+
+   while [ not file-at-end? ] [
+    set coordinatesy lput file-read coordinatesy
+  ]
+  file-close
+  (foreach sort semaforos coordinatesy
+    [ask ?1 [set ycor ?2]])
+end
 
 
-
-;--------------------- Creacion del Mundo y de los Agentes presentes (Autos , Semaforos)
-to setup
-
-  clear-all
-
-  import-pcolors-rgb "Via.bmp"
-
-
-  configurar-semaforos
-
-  set-default-shape coches "car"
-  set-default-shape buses "bus"
-  set-default-shape camiones "truck"
-
-
-  create-buses Num_Buses [
+to crear-semaforos
+  create-semaforos 21[
+    coordenadas-semaforos
     set size 1
-    set color red - 1
-    set heading 90
-    set car? true
-    set numero-pasajeros random 80
-    random-zone-bus
-    comportamiento-autos
+    configurar-semaforos
     ]
 
-  create-coches Num_Coches [
-
-    set size 1
-    set color sky
-    set car? true
-    random-zone-cars
-    comportamiento-autos
-     ]
-
-
-  create-camiones Num_Camiones [
-    set size 1
-    set color magenta - 1
-    set car? true
-    random-zone-cars
-    comportamiento-autos
-     ]
-
-  reset-ticks
-
 end
 
-;-------------------------------Sensores -------------------------------------------
 to configurar-semaforos
-ask patches [
+ask semaforos [
   set sensor1? false
-  if (pxcor = 44) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 1 set pcolor green]
-  if (pxcor = 66) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 2 set pcolor green]
-  if (pxcor = 84) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 3 set pcolor green]
-  if (pxcor = 107) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 4 set pcolor green]
-  if (pxcor = 122) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 5 set pcolor green]
-  if (pxcor = 160) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 6 set pcolor green]
-  if (pxcor >= 187 and pxcor <= 188) and (pycor >= 47 and pycor <= 53) [set sensor1? true set from 7 set pcolor green]
-
-
+  coordenadas-semaforos
+  if (xcor = 44) and (ycor >= 47 and ycor <= 53) [set sensor1? true set from 1 set color green]
+  if (xcor = 107) and (ycor >= 47 and ycor <= 53) [set sensor1? true set from 2 set color red]
+  if (xcor = 160) and (ycor >= 47 and ycor <= 53) [set sensor1? true set from 3 set color green]
   ]
 end
+
+
 ;------------------------------ Comportamiento Autos -------------------------------
 
 to random-zone-bus
@@ -150,24 +128,20 @@ end
 to random-zone-cars
 
   let saberzona random 2
+  let targe-lane saberzona
 
   ifelse (saberzona = 0) [
 
     set heading 90
-    setxy (random 200) random (53 - 51) + 51
-    let target one-of other turtles-here
-    if target != nobody [
-      setxy (random 200) random (53 - 51) + 51
-      ]
+
+    setxy (random 200) 47
+
     ]
 
   [if (saberzona = 1) [
       set heading 90
-  setxy (random 200) random (49 - 47) + 47
-  let target2 one-of other turtles-here
-    if target2 != nobody [
-      setxy (random 200) random (53 - 51) + 51
-      ]
+      setxy (random 200) 52
+
        ]
    ]
 
@@ -197,43 +171,94 @@ to mantener-distancia
   ]
 end
 
-;-------------------Declaracion de los Semaforos-------------------------------------------
-to setup-semaforos
+;--------------------- Creacion del Mundo y de los Agentes presentes (Autos , Semaforos)
+to setup
 
- ; foreach [90 270] [set-car-light? green]
+  clear-all
+
+  import-pcolors-rgb "Via.bmp"
+
+
+
+  set-default-shape coches "car"
+  set-default-shape buses "bus"
+  set-default-shape camiones "truck"
+  set-default-shape semaforos "circle"
+  set cont_indv_desv 0
+
+  ;crear-semaforos
+
+  create-buses Num_Buses [
+    set size 1
+    set color turquoise - 1
+    set heading 90
+    set car? true
+    set parar? false
+    set numero-pasajeros random 80
+    random-zone-bus
+    comportamiento-autos
+    ]
+
+  create-coches Num_Coches [
+
+    set size 1
+    set color sky
+    set car? true
+    set parar? false
+    random-zone-cars
+    comportamiento-autos
+     ]
+
+
+  create-camiones Num_Camiones [
+    set size 1
+    set color lime - 1
+    set car? true
+    set parar? false
+    random-zone-cars
+    comportamiento-autos
+     ]
+
+  reset-ticks
 
 end
 
-to set-car-light [dir col]
- ; ask patches with [sensor1? = true and from = dir] [set pcolor col set change-marker ticks]
-end
 
-to set-walker-light [dir col]
- ; ask patches with [sensor2? = true and from = dir] [set pcolor col set change-marker ticks]
-end
+
+
+
 ; ------------------------Compotamiento en Ejecucion -------------------
 
 
 
 to drive
 
- comportamiento-semaforos
-
  ask turtles with [car? = true]
    [
    move
-   ; revisar semaforos
-   ask turtles with [color = red - 1][revisar-paraderos]
-   ]
+   tomar-interseccion
 
-   tick
+
+   change-carril
+   ask turtles with [color = turquoise - 1][revisar-paraderos]
+   ]
+revisar-zonas-muertas
+ ;ask semaforos [comportamiento-semaforos estado-climatico]
+
+
+ tick
 
 
 end
 
+;-------------------------------------------------------------------------------------------
+
 to move
+
   ifelse (any? turtles-at 1 0) [
-      set speed ([speed] of (one-of (turtles-at 1 0))) ; revisar que el target sea un carro y no un semaforo
+
+
+      set speed ([speed] of (one-of (turtles-at 1 0 ))) ; revisar que el target sea un carro y no un semaforo
       decelerate
     ]
     [
@@ -241,6 +266,7 @@ to move
         ifelse (any? turtles-at 2 0) [
           set speed ([speed] of (one-of turtles-at 2 0)) ;; revisar que el target sea un carro y no un semaforo
           decelerate
+          set max-patience max-patience + 1
         ]
         [
           accelerate
@@ -252,7 +278,25 @@ to move
     ]
     if (speed < 0.01) [ set speed 0.01 ]
     if (speed > speed-limit) [ set speed speed-limit ]
-    fd speed
+
+end
+
+to change-carril
+
+    ifelse (change? = false) [ signal ] [ change-lanes ]
+    ;; Control for making sure no one crashes.
+    ifelse (any? (turtles-at 1 0)) and (xcor != min-pxcor - .5) [
+      set speed [speed] of (one-of turtles-at 1 0)
+    ]
+    [
+      ifelse ((any? turtles-at 2 0) and (speed > 1.0)) [
+        set speed ([speed] of (one-of turtles-at 2 0))
+        fd 1
+      ]
+      [
+        jump speed
+      ]
+    ]
 
 end
 
@@ -265,6 +309,155 @@ to decelerate
   set speed (speed - (desaceleracion / 1000))
 end
 
+
+to signal
+  ifelse (any? turtles-at 1 0) [
+    if ([speed] of (one-of (turtles-at 1 0))) < (speed) [
+      set change? true
+    ]
+  ]
+  [
+    set change? false
+  ]
+end
+
+to change-lanes  ;; turtle procedure
+  ifelse (patience <= 0)
+  [
+    ifelse (max-patience <= 1) [
+      set max-patience (random 10) + 1
+    ]
+    [
+      set max-patience (max-patience - (random 5))
+    ]
+    set patience max-patience
+    ifelse (target-lane = 0) [
+      set target-lane 1
+      set lane 0
+    ]
+    [
+      set target-lane 0
+      set lane 1
+    ]
+  ]
+  [
+    set patience (patience - 1)
+  ]
+
+
+  ifelse (target-lane = lane)
+  [
+    ifelse (target-lane = 0)
+    [
+      set target-lane 1
+      set change? false
+    ]
+    [
+      set target-lane 0
+      set change? false
+    ]
+  ]
+  [
+    ifelse (target-lane = 1) [
+      ifelse (pycor = 52) [
+        set lane 1
+        set change? false
+      ]
+      [
+        ifelse (not any? turtles-at 0 1) [
+          set ycor (ycor + 1)
+        ]
+        [
+          ifelse (not any? turtles-at 1 0) [
+            set xcor (xcor + 1)
+          ]
+          [
+            decelerate
+            if (speed <= 0) [ set speed 0.1 ]
+          ]
+        ]
+      ]
+    ]
+    [
+      ifelse (pycor = 47) [
+        set lane 0
+        set change? false
+      ]
+      [
+        ifelse (not any? turtles-at 0 -1) [
+          set ycor (ycor - 1)
+        ]
+        [
+          ifelse (not any? turtles-at 1 0) [
+            set xcor (xcor + 1)
+          ]
+          [
+            decelerate
+            if (speed <= 0) [ set speed 0.1 ]
+          ]
+        ]
+      ]
+    ]
+  ]
+end
+
+;------------------------------------------------------------------------------------------------
+
+to tomar-interseccion
+
+ifelse ((xcor >= 68 and xcor <= 70) and ycor = 47)[
+
+
+  cambiar-derecha
+
+
+  ]
+  [
+
+    ifelse  ((xcor >= 88 and xcor <= 90) and ycor = 47) [
+      cambiar-derecha
+
+
+      ]
+
+    [
+      ifelse  ((xcor >= 110 and xcor <= 112) and ycor = 47)[
+        cambiar-derecha
+
+        ][]
+      ]
+    ]
+
+
+end
+
+
+to revisar-zonas-muertas
+
+  ask turtles [
+    if [pcolor] of patch-here = [160 32 0] [
+      set car? false
+
+    ]
+  ]
+end
+
+to cambiar-derecha
+  let cambiar-inter (random 15)
+  ifelse (cambiar-inter = 1)
+  [
+    set heading 180
+    set cont_indv_desv cont_indv_desv + 1
+
+  ]
+  [
+    set heading 90
+  ]
+end
+
+
+
+;-------------------------------------------------------------------------------------------------
 
 to revisar-paraderos
 
@@ -283,13 +476,13 @@ to revisar-paraderos
             ifelse (xcor <= 107 )
             [
               set cont_indv_bogota_recogidos cont_indv_bogota_recogidos + num-random
-              print "estaba en bogota recogiendo pasajeros"
+
             ]
             [
-              ifelse (xcor > 107)[
+              if (xcor > 107)[
                 set cont_indv_mosquera_recogidos cont_indv_mosquera_recogidos + num-random
-                print "estaba en mosquera recogiendo pasajeros"
-                ][]
+
+                ]
             ]
           ]
 
@@ -300,12 +493,12 @@ to revisar-paraderos
 
             ifelse (xcor <= 107 )[
               set cont_indv_bogota_dejados cont_indv_bogota_dejados + num-random
-              print "estaba en bogota dejando pasajeros"
+
               ][
-              ifelse (xcor > 107)[
+              if (xcor > 107)[
                 set cont_indv_mosquera_dejados cont_indv_mosquera_dejados + num-random
-                print "estaba en mosquera dejando pasajeros"
-                ][]
+
+                ]
               ]
 
           ]
@@ -323,40 +516,43 @@ end
 
 ;----------------------------------Semaforos ---------------------------------------------
 
+
 to comportamiento-semaforos
 
-  ask semaforos with [ xcor = 44 ] [
-    if auto? and elapsed? duracion-luz-verde [
-    change-to-yellow
+  if (ticks mod 100 = 0)
+  [
+    foreach [1 3] [change-to-green]
+    foreach [2] [change-to-red]
   ]
-  ; if a light has been yellow for long enough,
-  ; we turn it red and turn the other one green
-  if any? semaforos with [ color = yellow ] and elapsed? duracion-luz-amarilla [
-    change-to-red
-  ]
+
+  if (ticks mod 60 = 0)
+  [
+    foreach [1 3] [change-to-red]
+    foreach [2] [change-to-green]
     ]
+
 
 end
 
-to change-to-yellow
-  ask semaforos with [ color = green ] [
-    set color yellow
-    set speed 0.05
-    set ticks-at-last-change ticks
-  ]
+to change-to-green
+    set color green
+
 end
 
 to change-to-red
-  ask semaforos with [ color = yellow ] [
     set color red
-    set speed 0
-    ask other semaforos [ set color green ]
-    set ticks-at-last-change ticks
-  ]
 end
 
-to-report elapsed? [ time-length ]
-  report (ticks - ticks-at-last-change) > time-length
+
+
+;------------------------------- Soleado o  LLuvioso -----------------------------------------
+to estado-climatico
+ifelse (ticks mod 400 = 0)[
+   set estado-clima 0
+  ][
+  set estado-clima 1
+  ]
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -410,8 +606,8 @@ SLIDER
 110
 Num_Coches
 Num_Coches
-0
-25
+1
+50
 3
 1
 1
@@ -427,17 +623,17 @@ aceleracion
 aceleracion
 0
 50
-3
+10
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-20
-558
-83
-591
+21
+605
+84
+638
 NIL
 drive
 T
@@ -468,9 +664,9 @@ SLIDER
 152
 Num_Buses
 Num_Buses
-0
-25
-15
+1
+50
+3
 1
 1
 NIL
@@ -483,8 +679,8 @@ SLIDER
 194
 Num_Camiones
 Num_Camiones
-0
-25
+1
+50
 3
 1
 1
@@ -500,7 +696,7 @@ desaceleracion
 desaceleracion
 0
 10
-2
+4
 1
 1
 NIL
@@ -515,7 +711,7 @@ duracion-luz-verde
 duracion-luz-verde
 0
 50
-15
+0
 1
 1
 NIL
@@ -530,17 +726,17 @@ duracion-luz-amarilla
 duracion-luz-amarilla
 0
 10
-3
+0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-20
-510
-126
-543
+21
+557
+127
+590
 drive-on-step
 drive
 NIL
@@ -551,7 +747,7 @@ NIL
 NIL
 NIL
 NIL
-1
+0
 
 PLOT
 1524
@@ -626,6 +822,35 @@ true
 "" ""
 PENS
 "Promedio de Velocidad" 1.0 0 -13840069 true "" "plot mean [speed] of turtles with [car? = true]"
+
+MONITOR
+1932
+384
+2015
+429
+Estado Clima
+estado-clima
+17
+1
+11
+
+PLOT
+1525
+575
+1902
+746
+Rutas Desviadas
+Tiempo
+# Rutas desviadas
+0.0
+100.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"# Rutas Desviadas" 1.0 0 -14070903 true "" "plot cont_indv_desv"
 
 @#$#@#$#@
 ## WHAT IS IT?
