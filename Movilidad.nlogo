@@ -244,9 +244,8 @@ to drive
  ask turtles with [car? = true]
    [
    move
-   ask turtles with [color = red - 1][
-
-   revisar-paraderos]
+   ; revisar semaforos
+   ask turtles with [color = red - 1][revisar-paraderos]
    ]
 
    tick
@@ -260,7 +259,7 @@ to move
       decelerate
     ]
     [
-      ifelse (look-ahead = 2) [
+      ifelse (separacion = 2) [
         ifelse (any? turtles-at 2 0) [
           set speed ([speed] of (one-of turtles-at 2 0)) ;; revisar que el target sea un carro y no un semaforo
           decelerate
@@ -279,19 +278,17 @@ to move
 
 end
 
-to accelerate  ;; turtle procedure
+to accelerate
   set speed (speed + (aceleracion / 1000))
 end
 
-;; reduce speed of cars
-to decelerate  ;; turtle procedure
+
+to decelerate
   set speed (speed - (desaceleracion / 1000))
 end
 
+
 to revisar-paraderos
-
-
-
 
       ifelse (pcolor = [0 69 139]) [
 
@@ -300,7 +297,7 @@ to revisar-paraderos
 
           let decicion-dejar-recoger random 2
           ifelse (decicion-dejar-recoger = 1)
-          [  ; si el numero random es 0 se tomara la decicion de dejar pasajeros
+          [
             let num-random (random 15)
             set numero-pasajeros (numero-pasajeros - num-random)
 
@@ -346,17 +343,7 @@ to revisar-paraderos
 
 end
 
-
-
-
-
-
-
-
-
-
-
-
+;----------------------------------Semaforos ---------------------------------------------
 
 to comportamiento-semaforos
 
@@ -393,10 +380,10 @@ to-report elapsed? [ time-length ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-558
-10
-1866
-693
+205
+20
+1513
+703
 -1
 -1
 6.46
@@ -466,26 +453,11 @@ aceleracion
 NIL
 HORIZONTAL
 
-SLIDER
-248
-12
-420
-45
-look-ahead
-look-ahead
-1
-2
-1
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-347
-422
-410
-455
+20
+558
+83
+591
 NIL
 drive
 T
@@ -499,10 +471,10 @@ NIL
 0
 
 SWITCH
-450
-10
-553
-43
+19
+454
+122
+487
 auto?
 auto?
 0
@@ -555,25 +527,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-22
-376
-194
-409
+19
+371
+191
+404
 duracion-luz-verde
 duracion-luz-verde
 0
 50
-12
+15
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-22
-420
-194
-453
+19
+415
+191
+448
 duracion-luz-amarilla
 duracion-luz-amarilla
 0
@@ -585,10 +557,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-368
-172
-474
-205
+20
+510
+126
+543
 drive-on-step
 drive
 NIL
@@ -602,10 +574,10 @@ NIL
 1
 
 PLOT
-17
-509
-528
-832
+1524
+21
+2035
+344
 # Individuos
 # Recogidos
 tiempo
@@ -621,6 +593,59 @@ PENS
 "# Recogidos_Bogota" 1.0 0 -2139308 true "" "plot cont_indv_bogota_recogidos"
 "# Dejados_Mosquera" 1.0 0 -14070903 true "" "plot cont_indv_mosquera_dejados"
 "# Dejados_Bogota" 1.0 0 -5298144 true "" "plot cont_indv_bogota_dejados"
+
+SLIDER
+18
+307
+190
+340
+separacion
+separacion
+0
+2
+1
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+23
+350
+173
+368
+Semaforos
+11
+0.0
+1
+
+TEXTBOX
+23
+203
+173
+221
+Comportamiento Autos
+11
+0.0
+1
+
+PLOT
+1524
+367
+1904
+567
+Promedio de Velocidad
+Tiempo
+Velocidad
+0.0
+100.0
+0.0
+1.0
+true
+true
+"" ""
+PENS
+"Promedio de Velocidad" 1.0 0 -13840069 true "" "plot mean [speed] of turtles with [car? = true]"
 
 @#$#@#$#@
 ## WHAT IS IT?
