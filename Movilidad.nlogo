@@ -951,7 +951,7 @@ porcen-aparicion-buses
 porcen-aparicion-buses
 0
 1
-0.1
+0.15
 0.05
 1
 NIL
@@ -966,7 +966,7 @@ porcen-aparicion-camiones
 porcen-aparicion-camiones
 0
 1
-0.1
+0.05
 0.05
 1
 NIL
@@ -989,7 +989,7 @@ true
 "" ""
 PENS
 "Coches" 1.0 0 -13791810 true "" "plot count turtles with [color = sky]"
-"Buses" 1.0 0 -15302303 true "" "plot count turtles with [color = turquoise - 1]"
+"Buses" 1.0 0 -2674135 true "" "plot count turtles with [color = turquoise - 1]"
 "Camiones" 1.0 0 -14439633 true "" "plot count turtles with [color = lime - 1]"
 
 @#$#@#$#@
