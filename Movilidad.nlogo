@@ -14,8 +14,8 @@ turtles-own [
   target-lane   ;; the desired lane of the car
   patience      ;; the driver's current patience
   max-patience  ;; the driver's maximum patience
-  change?       ;; Si el autor va a cambiar de carril
-  parar?        ;; Si el auto podria parar en un cruce
+  change?
+  parar?
   ]
 
 buses-own [
@@ -200,7 +200,6 @@ to setup
   set dias-buenclima 0
 
   ;crear-semaforos
-
   crear-manejador-tiempo
   create-buses Num_Buses [
     set size 1
@@ -250,7 +249,7 @@ to drive
  ask turtles with [car? = true]
    [
    move
-
+   tomar-interseccion
    change-carril
    reproducir-buses
    reproducir-camiones
@@ -285,10 +284,10 @@ end
 
 to move
 
-
   ifelse (any? turtles-at 1 0) [
 
-      set speed ([speed] of (one-of (turtles-at 1 0))) ; revisar que el target sea un carro y no un semaforo
+
+      set speed ([speed] of (one-of (turtles-at 1 0 ))) ; revisar que el target sea un carro y no un semaforo
       decelerate
     ]
     [
@@ -588,13 +587,11 @@ end
 
 to change-to-green
     set color green
-    set speed 0.05
 
 end
 
 to change-to-red
     set color red
-    set speed 0
 end
 
 
@@ -954,7 +951,7 @@ porcen-aparicion-buses
 porcen-aparicion-buses
 0
 1
-0.05
+0.15
 0.05
 1
 NIL
